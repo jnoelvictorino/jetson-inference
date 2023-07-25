@@ -308,3 +308,4 @@ The DIGITS tutorial includes training DNN's in the cloud or PC, and inference on
 ##
 <p align="center"><sup>© 2016-2019 NVIDIA | </sup><a href="#deploying-deep-learning"><sup>Table of Contents</sup></a></p>
 
+
