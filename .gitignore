@@ -6,3 +6,6 @@ logs/
 *.pyc
 *.tar.gz
 *.pem
+
+data/NursingHome*
+data/retraining
