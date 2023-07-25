@@ -47,6 +47,8 @@ show_help() {
     echo "                          as all further arguments will form the command."
     echo "                          If no run command is specified, an interactive"
     echo "                          terminal into the container will be provided."
+    echo "   -n, --name DOCKER_CONTAINER_NAME Specifies the name of the Docker container"
+    echo "                                (default: 'pose-estimation')"
 }
 
 die() {
@@ -77,6 +79,7 @@ USER_COMMAND=""
 USER_VOLUME=""
 DEV_VOLUME=""
 ROS_DISTRO=""
+DOCKER_CONTAINER_NAME=""
 
 while :; do
     case $1 in
@@ -137,6 +140,20 @@ while :; do
                 die 'ERROR: "--run" requires a non-empty option argument.'
             fi
             ;;
+        -n|--name)  # takes an option argument; ensure it has been specified.
+            if [ "$2" ]; then
+                DOCKER_CONTAINER_NAME=$2
+                shift
+            else
+                die 'ERROR: "--name" requires a non-empty option argument.'
+            fi
+            ;;
+        --name=?*)
+            DOCKER_CONTAINER_NAME=${1#*=} # delete everything up to "=" and assign the remainder.
+            ;;
+        --name=)  # handle the case of an empty flag
+            die 'ERROR: "--name" requires a non-empty option argument.'
+            ;;
         --)
             shift
             break
@@ -176,6 +193,11 @@ if [ -n "$DISPLAY" ]; then
 	DISPLAY_DEVICE=" -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix "
 fi
 
+# set container name by "pose-estimation" (unless specified by user)
+if [ -z "$DOCKER_CONTAINER_NAME" ]; then
+  DOCKER_CONTAINER_NAME="pose-estimation"
+fi
+
 # print configuration
 print_var() 
 {
@@ -195,32 +217,51 @@ print_var "V4L2_DEVICES"
 print_var "DISPLAY_DEVICE"
 
 # run the container
-if [ $ARCH = "aarch64" ]; then
+if [[ $ARCH = "aarch64" ]]; then
 
 	# /proc or /sys files aren't mountable into docker
 	cat /proc/device-tree/model > /tmp/nv_jetson_model
 
-	sudo docker run --runtime nvidia -it --rm \
-		--network host \
-		-v /tmp/argus_socket:/tmp/argus_socket \
-		-v /etc/enctune.conf:/etc/enctune.conf \
-		-v /etc/nv_tegra_release:/etc/nv_tegra_release \
-		-v /tmp/nv_jetson_model:/tmp/nv_jetson_model \
-		$DISPLAY_DEVICE $V4L2_DEVICES \
-		$DATA_VOLUME $USER_VOLUME $DEV_VOLUME \
-		$CONTAINER_IMAGE $USER_COMMAND
+  # Check if container exists
+  if [[ "$(docker ps -a | grep $DOCKER_CONTAINER_NAME)" ]]; then
 
-elif [ $ARCH = "x86_64" ]; then
+    docker start -i $DOCKER_CONTAINER_NAME
 
-	sudo docker run --gpus all -it --rm \
+  else
+
+    # JNV's note: removed '--rm' to keep container
+    sudo docker run --runtime nvidia -it \
+      --name $DOCKER_CONTAINER_NAME \
+      --network host \
+      -v /tmp/argus_socket:/tmp/argus_socket \
+      -v /etc/enctune.conf:/etc/enctune.conf \
+      -v /etc/nv_tegra_release:/etc/nv_tegra_release \
+      -v /tmp/nv_jetson_model:/tmp/nv_jetson_model \
+      $DISPLAY_DEVICE $V4L2_DEVICES \
+      $DATA_VOLUME $USER_VOLUME $DEV_VOLUME \
+      $CONTAINER_IMAGE $USER_COMMAND
+  fi
+
+
+elif [[ $ARCH = "x86_64" ]]; then
+
+  # Check if container exists
+  if [[ "$(docker ps -a | grep $DOCKER_CONTAINER_NAME)" ]]; then
+
+    docker start -i $DOCKER_CONTAINER_NAME
+
+  else
+
+	sudo docker run --gpus 1 -it \
+    --name $DOCKER_CONTAINER_NAME \
 		--network=host \
-		--shm-size=8g \
+		--shm-size=16g \
 		--ulimit memlock=-1 \
 		--ulimit stack=67108864 \
 		-e NVIDIA_DRIVER_CAPABILITIES=all \
 		$DISPLAY_DEVICE $V4L2_DEVICES \
 		$DATA_VOLUME $USER_VOLUME $DEV_VOLUME \
 		$CONTAINER_IMAGE $USER_COMMAND
-		
-fi
+  fi
 
+fi
