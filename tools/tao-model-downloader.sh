@@ -25,7 +25,8 @@ LOG="[TRT]   "
 WGET_QUIET="--quiet"
 NETWORK_DIR="/usr/local/bin/networks"
 
-source /usr/local/bin/l4t_version.sh
+# source /usr/local/bin/l4t_version.sh
+source /jetson-inference/tools/l4t_version.sh
 
 
 #
@@ -145,10 +146,13 @@ function download_archive()
 #
 function download_tao_converter()
 {
-	local url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.21.11_trt8.0_aarch64/files/tao-converter"
+	# local url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.21.11_trt8.0_aarch64/files/tao-converter"
+  local url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.22.05_trt8.4_x86/files/tao-converter"
+  
 	
 	if [[ $L4T_RELEASE -ge 34 ]]; then
-		url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.22.05_trt8.4_aarch64/files/tao-converter"
+		# url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.22.05_trt8.4_aarch64/files/tao-converter"
+    url="https://api.ngc.nvidia.com/v2/resources/nvidia/tao/tao-converter/versions/v3.22.05_trt8.4_x86/files/tao-converter"
 	fi
 	
 	echo "$LOG downloading tao-converter from $url"
