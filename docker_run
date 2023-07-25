@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# sudo /usr/bin/X :1 & sudo /usr/lib/xorg/Xorg :1 -background none -noreset -keeptty -verbose 3 & Xorg :1 &
+
+# # give docker root user X11 permissions
+sudo xhost +si:localuser:root
+# xhost +local:root
+
+DISPLAY=:0 docker/run.sh -c jvictorino/jetson-inference:22.06 \
+  --volume $(pwd)/scripts:/jetson-inference/scripts \
+  --volume $(pwd)/yolov7:/jetson-inference/yolov7
+
+# sudo docker run -ti --rm -e DISPLAY=$DISPLAY -v $XAUTH:$XAUTH \
+#    -e XAUTHORITY=$XAUTH name_of_docker_image
