@@ -28,3 +28,9 @@
 [submodule "ros"]
 	path = ros
 	url = https://github.com/dusty-nv/ros_deep_learning
+[submodule "yolov7"]
+  path = yolov7
+  url = https://github.com/WongKinYiu/yolov7
+[submodule "easy-yolov7"]
+  path = easy-yolov7
+  url = https://github.com/theos-ai/easy-yolov7
